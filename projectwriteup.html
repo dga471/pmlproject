@@ -79,16 +79,6 @@ tf &lt;- read.csv(&quot;pml-testing.csv&quot;)
 
 library(caret)
 library(dplyr)</code></pre>
-<pre><code>## 
-## Attaching package: 'dplyr'
-## 
-## The following objects are masked from 'package:stats':
-## 
-##     filter, lag
-## 
-## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union</code></pre>
 <p>The training data consists of 19,622 observables of 160 variables. We want to trim down the data such that we can cut down on the processing time while still making an effective model to predict on the test data. We first examine the test data, and discover that there are several columns which only consist of NAs. Taking these columns on the training set would be useless when we finally apply it to the training set, so we get rid of these columns in the training set:</p>
 <pre class="r"><code>gdf &lt;- df[,colSums(is.na(tf)) &lt; nrow(tf)] </code></pre>
 <p>We still observe that there are columns that consists of many zeros in the training set. The zeros in such columns are most likely not observations, but malfunctioning sensors or something similar. So it makes sense to eliminate them. In any case, they will not influence the models in a significant way even if there is still some data in them. We set a threshold of how many zeros in a column is too much. After playing around a little bit (including running our eventual model on different threshold levels), we decided to set the threshold at 2.5%:</p>
@@ -141,13 +131,13 @@ rgdf &lt;- gdf[coldata &lt; maxprop * nrow(gdf)]</code></pre>
 for (i in 1:5){
   successvec[i] = modClasse(trgdf = trgdf,n = 6000,tcnumber = 3, tcrepeats = 1,pcamethod = NULL,fitmethod = &quot;rf&quot;)
 }</code></pre>
-<pre><code>## [1] 0.9779559
-## [1] 0.9846359
-## [1] 0.9839786
-## [1] 0.9779853
-## [1] 0.9766199</code></pre>
+<pre><code>## [1] 0.9766511
+## [1] 0.9806409
+## [1] 0.9792919
+## [1] 0.9866489
+## [1] 0.9752839</code></pre>
 <pre class="r"><code>mean(successvec)</code></pre>
-<pre><code>## [1] 0.9802351</code></pre>
+<pre><code>## [1] 0.9797033</code></pre>
 <p>From our cross-validation techniques executed several times as seen above, we estimated the error rate to be 100 minus the success rate, which gives us 2%. When we are using the full training set instead of just 6000, presumably this error rate will be even lower. we were hence ready to apply the chosen model to the entire dataset.</p>
 </div>
 <div id="applying-the-model-to-the-entire-set" class="section level2">
@@ -164,7 +154,25 @@ allowParallel = FALSE
 fitControl &lt;- trainControl(method = tcmethod,number = tcnumber,repeats = tcrepeats,allowParallel = allowParallel)</code></pre>
 <p>Then we are ready to apply the model:</p>
 <pre class="r"><code>fullFit &lt;- train(classe ~ ., data=tsgdf,method = fitmethod,trControl = fitControl)
-print(sampleFit)</code></pre>
+print(fullFit)</code></pre>
+<pre><code>## Random Forest 
+## 
+## 19622 samples
+##    36 predictor
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 
+## No pre-processing
+## Resampling: Cross-Validated (3 fold, repeated 1 times) 
+## Summary of sample sizes: 13082, 13081, 13081 
+## Resampling results across tuning parameters:
+## 
+##   mtry  Accuracy   Kappa      Accuracy SD   Kappa SD   
+##    2    0.9927633  0.9908452  0.0008823668  0.001116122
+##   19    0.9965854  0.9956809  0.0014209554  0.001797275
+##   36    0.9946488  0.9932309  0.0016112713  0.002038467
+## 
+## Accuracy was used to select the optimal model using  the largest value.
+## The final value used for the model was mtry = 19.</code></pre>
 </div>
 <div id="predicting-on-the-actual-test-set" class="section level2">
 <h2>Predicting on the Actual Test Set</h2>
